@@ -1,100 +1,119 @@
-BayesAudit
+# Bayesian Audit Grade Prediction under Label Scarcity
 
-Towards a Probabilistic Early Alert System in Auditing
+This repository contains the code and experiments for an **MCS research project** focused on **audit grade prediction** using **Bayesian machine learning** under **extreme label scarcity**.
 
-Abstract
+The work investigates whether **temporal KPI-based risk indicators** can be used to probabilistically predict audit grades when only a small number of labeled audits are available.
 
-BayesAudit is a research-oriented machine learning framework designed to support early warning signals in auditing by integrating machine learning–based anomaly detection with Bayesian prior knowledge. The project aims to address a key limitation of traditional audit analytics, which often rely on purely data-driven anomaly scores without formally incorporating domain expertise or prior risk assessments.
+---
 
-By fusing anomaly evidence with Bayesian inference, BayesAudit produces probabilistic risk estimates that are more interpretable, context-aware, and suitable for audit decision-making under uncertainty.
+## 📌 Problem Statement
 
-Research Motivation
+Retail audit outcomes (grades) are expensive and infrequent, resulting in:
 
-Existing audit analytics systems predominantly focus on detecting irregular patterns in transactional data. While effective at identifying anomalies, these systems typically lack mechanisms to:
+- **Very limited labeled data** (63 audited branches)
+- **Large amounts of unlabeled operational data** (300+ branches)
+- High uncertainty and class imbalance
 
-Incorporate prior audit knowledge
+Traditional machine learning models tend to **overfit** and produce **overconfident predictions** in such settings.
 
-Quantify uncertainty in alert generation
+---
 
-Distinguish between statistically rare events and substantively risky cases
+## 🎯 Research Objectives
 
-BayesAudit proposes a probabilistic framework that combines machine learning outputs with Bayesian reasoning to enhance early alert reliability and interpretability.
+1. Develop a **Bayesian classification framework** suitable for small labeled datasets  
+2. Model **temporal KPI behavior prior to audits**  
+3. Quantify **predictive uncertainty** to support risk-aware decision-making  
+4. Evaluate how **kernel assumptions** affect performance under label scarcity  
 
-Methodological Framework
+---
 
-The proposed system consists of three conceptual layers:
+## 🧠 Methodology Overview
 
-Anomaly Detection Layer
-Machine learning models identify atypical patterns in audit-relevant data.
+### Data Processing
+- KPI time-series aligned relative to audit dates
+- Fixed **30-day pre-audit window** per branch
+- Missing-value analysis and feature pruning (>25% nulls removed)
+- Branch-level temporal aggregation
 
-Bayesian Inference Layer
-Prior beliefs derived from audit expertise, historical findings, or risk assessments are formally encoded and updated using observed anomaly evidence.
+### Feature Representation
+Each observation consists of:
+- Time index (`day`)
+- Operational risk KPIs (inventory, cash, credit, arrears, etc.)
 
-Probabilistic Alert Layer
-Posterior risk probabilities are generated to support auditor judgment rather than binary classification.
+---
 
-Key Research Contributions
+## 🔍 Model
 
-Integration of anomaly detection models with Bayesian prior knowledge
+We use a **Sparse Variational Gaussian Process (SVGP)** classifier implemented with **GPflow**.
 
-Probabilistic formulation of audit alert generation
+### Why Bayesian Gaussian Processes?
+- Sample-efficient learning
+- Explicit modeling of **epistemic uncertainty**
+- Well-suited for **low-label regimes**
+- Probabilistic outputs (not just hard predictions)
 
-Improved interpretability of anomaly-based audit signals
+---
 
-Support for uncertainty-aware audit decision-making
+## 🧪 Experiments
 
-Planned Models and Techniques
+### 1️⃣ Kernel Sensitivity Analysis
 
-Anomaly Detection
+We compare multiple kernels to evaluate modeling assumptions about KPI behavior:
 
-Isolation Forest
+| Kernel | Accuracy | Macro-F1 |
+|------|----------|----------|
+| **RBF + Linear** | **0.862** | **0.805** |
+| RBF | 0.853 | 0.637 |
+| RBF × Linear | 0.845 | 0.633 |
+| Matern32 × Linear | 0.853 | 0.637 |
+| Matern32 | 0.845 | 0.505 |
+| Linear | 0.612 | 0.445 |
 
-One-Class SVM
+**Key insight:**  
+Additive kernels (RBF + Linear) outperform multiplicative and non-smooth kernels by balancing expressiveness and regularization under limited labeled data.
 
-Autoencoders
+---
 
-Bayesian Modeling
+### 2️⃣ Bayesian Uncertainty Analysis (Core Contribution)
 
-Bayesian updating of risk probabilities
+We evaluate whether **predictive entropy** correlates with model error.
 
-Prior elicitation from domain knowledge
+**Results:**
+- Mean entropy (correct predictions): **0.168**
+- Mean entropy (incorrect predictions): **0.356**
 
-Posterior inference and uncertainty quantification
+Incorrect predictions exhibit **more than double the uncertainty**, demonstrating that the model is aware of its own limitations.
 
-Evaluation Strategy
+---
 
-The framework will be evaluated using:
+### 3️⃣ Accuracy–Coverage Trade-off (Selective Prediction)
 
-Synthetic and/or real-world audit datasets
+By rejecting high-uncertainty predictions:
 
-Comparison against baseline anomaly detection methods
+| Coverage | Accuracy |
+|--------|----------|
+| 43% | 88% |
+| **61%** | **90%** |
+| 70% | 89% |
 
-Analysis of probabilistic alert calibration and interpretability
+This enables a **human-in-the-loop audit workflow**, where uncertain cases are deferred for manual review.
 
-Performance will be assessed in terms of detection capability, robustness, and decision relevance.
+---
 
-Intended Audience
+## 📊 Key Findings
 
-Researchers in auditing and accounting analytics
+- Bayesian uncertainty is **strongly correlated with misclassification**
+- Additive kernels are more robust under label scarcity
+- Selective prediction improves decision reliability
+- Gaussian Processes are well-suited for audit risk modeling
 
-Machine learning and probabilistic modeling researchers
+---
 
-Graduate students and academics working on audit automation
+## 🛠️ Technologies Used
 
-Project Status
+- Python
+- Pandas, NumPy
+- Scikit-learn
+- GPflow (TensorFlow)
+- Matplotlib, Seaborn
 
-🚧 Ongoing Research Project
-This repository accompanies an academic research effort and is under active development.
-
-Citation
-
-If you use or reference this work, please cite:
-
-Towards a Probabilistic Early Alert System in Auditing: Merging Machine Learning Anomalies with Bayesian Prior Knowledge
-
-(Citation details to be added.)
-
-License
-
-This project is intended for academic and research use.
-License information will be specified upon completion.
