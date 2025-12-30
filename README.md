@@ -61,15 +61,6 @@ Prior elicitation from domain knowledge
 
 Posterior inference and uncertainty quantification
 
-Project Structure
-BayesAudit/
-├── data/           # Datasets and data generation scripts
-├── notebooks/      # Exploratory analysis and experiments
-├── models/         # Trained ML and Bayesian models
-├── src/            # Core implementation
-├── experiments/    # Experimental setups and evaluations
-└── README.md
-
 Evaluation Strategy
 
 The framework will be evaluated using:
