@@ -1,139 +1,221 @@
-# Bayesian Audit Grade Prediction under Label Scarcity
+# Probabilistic Early Alert System for Retail Auditing using Bayesian Learning
 
-This repository contains the code and experiments for an **MCS research project** focused on **audit grade prediction** using **Bayesian machine learning** under **extreme label scarcity**.
+This repository contains the implementation and experiments for a **probabilistic audit grading system** that predicts retail branch audit outcomes using **Bayesian machine learning**.
 
-The work investigates whether **temporal KPI-based risk indicators** can be used to probabilistically predict audit grades when only a small number of labeled audits are available.
+The project focuses on leveraging **daily KPI-based risk indicators** and **temporal patterns** to generate **audit grade predictions with uncertainty estimates**, enabling proactive and risk-aware auditing.
 
 ---
 
 ## 📌 Problem Statement
 
-Retail audit outcomes (grades) are expensive and infrequent, resulting in:
+Retail audit processes are:
 
-- **Very limited labeled data** (63 audited branches)
-- **Large amounts of unlabeled operational data** (300+ branches)
-- High uncertainty and class imbalance
+- **Manual and time-consuming** (2–3 days per branch)
+- Conducted **infrequently**, leading to delayed issue detection
+- Dependent on **limited labeled audit data**
+- Surrounded by **large volumes of unlabeled KPI data**
 
-Traditional machine learning models tend to **overfit** and produce **overconfident predictions** in such settings.
+This creates challenges such as:
+
+- **Label scarcity** (only ~116 audited branches available)
+- **Class imbalance** across audit grades
+- Inability of traditional models to provide **reliable confidence measures**
 
 ---
 
-## 🎯 Research Objectives
+## 🎯 Objectives
 
-1. Develop a **Bayesian classification framework** suitable for small labeled datasets  
-2. Model **temporal KPI behavior prior to audits**  
-3. Quantify **predictive uncertainty** to support risk-aware decision-making  
-4. Evaluate how **kernel assumptions** affect performance under label scarcity  
+- Develop a **Bayesian classification model** for audit grade prediction  
+- Capture **temporal KPI behavior prior to audits**  
+- Provide **probabilistic predictions with uncertainty estimates**  
+- Evaluate model robustness through **kernel experiments**  
+- Improve performance using **semi-supervised learning**  
 
 ---
 
 ## 🧠 Methodology Overview
 
-### Data Processing
-- KPI time-series aligned relative to audit dates
-- Fixed **30-day pre-audit window** per branch
-- Missing-value analysis and feature pruning (>25% nulls removed)
-- Branch-level temporal aggregation
+### Data Sources
+- **Audit Dataset**: Historical audit grades with audit dates (~116 records after filtering)
+- **KPI Dataset**: Daily branch-level risk indicators (~58,000+ records)
 
-### Feature Representation
-Each observation consists of:
-- Time index (`day`)
-- Operational risk KPIs (inventory, cash, credit, arrears, etc.)
+### Data Processing
+- Convert date fields into datetime format
+- Filter audit data to **recent 60-day window**
+- Remove KPI features with **>25% missing values**
+- Handle missing values using **imputation (filled with 0 after filtering)**
+
+---
+
+## 🔧 Feature Engineering
+
+- Construct **sliding time windows** for each branch
+- Extract **last N days (7–45 days tested)** before audit date
+- Each observation includes:
+  - `day` (temporal index)
+  - Multiple KPI risk scores
+
+- Final feature vector:
+X = [time_index, KPI_features...]
+
+
+- Separate datasets:
+- **Graded branches** (labeled)
+- **Ungraded branches** (unlabeled)
 
 ---
 
 ## 🔍 Model
 
-We use a **Sparse Variational Gaussian Process (SVGP)** classifier implemented with **GPflow**.
+### Sparse Variational Gaussian Process (SVGP)
 
-### Why Bayesian Gaussian Processes?
-- Sample-efficient learning
-- Explicit modeling of **epistemic uncertainty**
-- Well-suited for **low-label regimes**
-- Probabilistic outputs (not just hard predictions)
+Implemented using **GPflow**, the model:
+
+- Handles **multi-class classification**
+- Uses **inducing points (KMeans)** for scalability
+- Optimizes **Evidence Lower Bound (ELBO)**
+
+### Why SVGP?
+
+- Works well with **small labeled datasets**
+- Provides **probabilistic outputs**
+- Captures **nonlinear relationships**
+- Enables **uncertainty quantification**
 
 ---
 
 ## 🧪 Experiments
 
-### 1️⃣ Kernel Sensitivity Analysis
+### 1️⃣ Baseline Model Performance
 
-We compare multiple kernels to evaluate modeling assumptions about KPI behavior:
+- Accuracy: **0.84**
+- Macro F1-score: **0.63**
+
+The model shows strong performance despite:
+- Limited labeled data
+- Imbalanced classes
+
+---
+
+### 2️⃣ Kernel Sensitivity Analysis
 
 | Kernel | Accuracy | Macro-F1 |
-|------|----------|----------|
+|--------|----------|----------|
 | **RBF + Linear** | **0.862** | **0.805** |
 | RBF | 0.853 | 0.637 |
-| RBF × Linear | 0.845 | 0.633 |
 | Matern32 × Linear | 0.853 | 0.637 |
+| RBF × Linear | 0.845 | 0.633 |
 | Matern32 | 0.845 | 0.505 |
 | Linear | 0.612 | 0.445 |
 
-**Key insight:**  
-Additive kernels (RBF + Linear) outperform multiplicative and non-smooth kernels by balancing expressiveness and regularization under limited labeled data.
+**Insight:**
+- Additive kernel (**RBF + Linear**) performs best
+- Captures both **global trends + nonlinear variations**
 
 ---
 
-### 2️⃣ Bayesian Uncertainty Analysis (Core Contribution)
+### 3️⃣ Bayesian Uncertainty Analysis
 
-We evaluate whether **predictive entropy** correlates with model error.
+We evaluate prediction confidence using **predictive entropy**:
 
-**Results:**
-- Mean entropy (correct predictions): **0.168**
-- Mean entropy (incorrect predictions): **0.356**
+- Mean entropy (Correct): **0.168**
+- Mean entropy (Incorrect): **0.356**
 
-Incorrect predictions exhibit **more than double the uncertainty**, demonstrating that the model is aware of its own limitations.
+➡️ Incorrect predictions show **significantly higher uncertainty**
 
 ---
 
-### 3️⃣ Accuracy–Coverage Trade-off (Selective Prediction)
+### 4️⃣ Accuracy–Coverage Trade-off
 
-By rejecting high-uncertainty predictions:
+Selective prediction using entropy threshold:
 
 | Coverage | Accuracy |
-|--------|----------|
+|----------|----------|
 | 43% | 88% |
 | **61%** | **90%** |
 | 70% | 89% |
 
-This enables a **human-in-the-loop audit workflow**, where uncertain cases are deferred for manual review.
+➡️ Enables **human-in-the-loop auditing**
+- High-confidence → automated
+- Low-confidence → manual review
+
+---
+
+### 5️⃣ Dynamic Time Window Experiment
+
+| Window (Days) | Accuracy |
+|--------------|----------|
+| 7 | **0.8707** |
+| 14 | 0.8534 |
+| 21 | **0.8707** |
+| 30 | 0.8448 |
+| 45 | 0.8276 |
+
+**Insight:**
+- Shorter windows (7–21 days) perform better
+- Long windows introduce **noise**
+
+---
+
+### 6️⃣ Semi-Supervised Learning (Pseudo-Labeling)
+
+Using unlabeled branches:
+
+| Method | Accuracy |
+|--------|----------|
+| Baseline | 0.8448 |
+| Confidence-based | 0.8448 |
+| **Entropy-based** | **0.8534** |
+
+**Insight:**
+- Entropy filtering improves performance
+- Confidence-only filtering is less reliable
 
 ---
 
 ## 📊 Key Findings
 
-- Bayesian uncertainty is **strongly correlated with misclassification**
-- Additive kernels are more robust under label scarcity
-- Selective prediction improves decision reliability
-- Gaussian Processes are well-suited for audit risk modeling
+- Bayesian models perform well under **label scarcity**
+- **Kernel selection** significantly impacts performance
+- **Uncertainty estimation** improves decision reliability
+- **Short-term temporal patterns** are most informative
+- **Semi-supervised learning** provides measurable gains
 
 ---
 
 ## 🛠️ Technologies Used
 
-- Python
-- Pandas, NumPy
-- Scikit-learn
-- GPflow (TensorFlow)
-- Matplotlib, Seaborn
+- Python  
+- Pandas, NumPy  
+- Scikit-learn  
+- GPflow (TensorFlow backend)  
+- Matplotlib, Seaborn  
 
 ---
 
-## 🚀 Future Work
+## 📁 Project Structure
+/Experiments
+├── kernel_analysis
+├── uncertainty_analysis
+├── time_window_experiment
+├── semi_supervised
+/Notebooks
+README.md
 
-- Semi-supervised learning using entropy-filtered pseudo-labels
-- Early-warning analysis (predicting grades days before audit)
-- Bayesian calibration metrics (Brier score, ECE)
-- Comparison with non-Bayesian baselines (RF, XGBoost)
 
 ---
 
-## 🎓 Academic Context
+## 🚀 Future Improvements
 
-This work is conducted as part of a **Master of Computer Science (MCS)** research project and is intended for academic evaluation and potential extension into publishable applied ML research.
+- Advanced Bayesian models (Deep GP, BNN)
+- Real-time deployment pipeline
+- Improved class imbalance handling
+- Explainability (SHAP, feature attribution)
+- Calibration metrics (ECE, Brier Score)
 
 ---
 
 ## 📬 Contact
 
-For questions or collaboration, please reach out via GitHub Issues.
+For questions, discussions, or collaboration:
+- Open an issue in this repository
