@@ -1,4 +1,4 @@
-# Probabilistic Early Alert System for Retail Auditing using Bayesian Learning
+# Bayesian Audit Grade Prediction under Label Scarcity
 
 This repository contains the implementation and experiments for a **probabilistic audit grading system** that predicts retail branch audit outcomes using **Bayesian machine learning**.
 
