@@ -1,0 +1,31 @@
+# Data
+data/
+datasets/
+*.csv
+*.xlsx
+*.xls
+*.parquet
+*.feather
+
+# Models
+Models/
+*.pkl
+*.joblib
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Video
+Videos/
+*.mp4
+
+# folders
+Thesis/
+Docs/

@@ -117,3 +117,23 @@ This enables a **human-in-the-loop audit workflow**, where uncertain cases are d
 - GPflow (TensorFlow)
 - Matplotlib, Seaborn
 
+---
+
+## 🚀 Future Work
+
+- Semi-supervised learning using entropy-filtered pseudo-labels
+- Early-warning analysis (predicting grades days before audit)
+- Bayesian calibration metrics (Brier score, ECE)
+- Comparison with non-Bayesian baselines (RF, XGBoost)
+
+---
+
+## 🎓 Academic Context
+
+This work is conducted as part of a **Master of Computer Science (MCS)** research project and is intended for academic evaluation and potential extension into publishable applied ML research.
+
+---
+
+## 📬 Contact
+
+For questions or collaboration, please reach out via GitHub Issues.
